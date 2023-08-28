@@ -15,312 +15,294 @@ use onOffice\SDK\internal\Request;
  */
 class ApiCall
 {
-	/** @var Request[] */
-	private $_requestQueue = array();
+  /** @var Request[] */
+  private $_requestQueue = array();
 
-	/** @var array */
-	private $_responses = array();
+  /** @var array */
+  private $_responses = array();
 
-	/** @var array */
-	private $_errors = array();
+  /** @var array */
+  private $_errors = array();
 
-	/** @var string */
-	private $_apiVersion = 'stable';
+  /** @var string */
+  private $_apiVersion = 'stable';
 
-	/** @var onOfficeSDKCache[] */
-	private $_caches = array();
+  /** @var onOfficeSDKCache[] */
+  private $_caches = array();
 
-	/** @var string */
-	private $_server = null;
+  /** @var string */
+  private $_server = null;
 
-	/** @var array */
-	private $_curlOptions = array();
-
-
-	/**
-	 * @param string $actionId
-	 * @param string $resourceId
-	 * @param string $identifier
-	 * @param string $resourceType
-	 * @param array $parameters
-	 *
-	 * @return int the request handle
-	 */
-
-	public function callByRawData($actionId, $resourceId, $identifier, $resourceType, $parameters = array())
-	{
-		$pApiAction = new ApiAction($actionId, $resourceType, $parameters, $resourceId, $identifier);
-
-		$pRequest = new Request($pApiAction);
-		$requestId = $pRequest->getRequestId();
-		$this->_requestQueue[$requestId] = $pRequest;
-
-		return $requestId;
-	}
-
-	/**
-	 * @param string $token
-	 * @param string $secret
-	 * @param HttpFetch|null $httpFetch
-	 *
-	 * @throws HttpFetchNoResultException
-	 */
-
-	public function sendRequests($token, $secret, HttpFetch $httpFetch = null)
-	{
-		$this->collectOrGatherRequests($token, $secret, $httpFetch);
-	}
-
-	/**
-	 * @param string $token
-	 * @param array $actionParameters
-	 * @param array $actionParametersOrder
-	 * @param \onOffice\SDK\internal\HttpFetch|null $httpFetch
-	 *
-	 * @throws HttpFetchNoResultException
-	 */
-
-	private function sendHttpRequests(
-		$token,
-		array $actionParameters,
-		array $actionParametersOrder,
-		HttpFetch $httpFetch = null
-	) {
-		if (count($actionParameters) === 0)
-		{
-			return;
-		}
-
-		$responseHttp = $this->getFromHttp($token, $actionParameters, $httpFetch);
-
-		$result = json_decode($responseHttp, true);
+  /** @var array */
+  private $_curlOptions = array();
 
 
-		if (!isset($result['response']['results']))
-		{
-			throw new HttpFetchNoResultException;
-		}
+  /**
+   * @param string $actionId
+   * @param string $resourceId
+   * @param string $identifier
+   * @param string $resourceType
+   * @param array $parameters
+   *
+   * @return int the request handle
+   */
 
-		$idsForCache = array();
+  public function callByRawData($actionId, $resourceId, $identifier, $resourceType, $parameters = array())
+  {
+    $pApiAction = new ApiAction($actionId, $resourceType, $parameters, $resourceId, $identifier);
 
-		foreach ($result['response']['results'] as $requestNumber => $resultHttp)
-		{
-			$pRequest = $actionParametersOrder[$requestNumber];
-			$requestId = $pRequest->getRequestId();
+    $pRequest = new Request($pApiAction);
+    $requestId = $pRequest->getRequestId();
+    $this->_requestQueue[$requestId] = $pRequest;
 
-			if ($resultHttp['status']['errorcode'] == 0)
-			{
-				$this->_responses[$requestId] = new Response($pRequest, $resultHttp);
-				$idsForCache []= $requestId;
-			}
-			else
-			{
-				$this->_errors[$requestId] = $resultHttp;
-			}
-		}
-		$this->writeCacheForResponses($idsForCache);
-	}
+    return $requestId;
+  }
 
-	/**
-	 * @param string $token
-	 * @param string $secret
-	 * @param HttpFetch|null $httpFetch
-	 *
-	 * @throws HttpFetchNoResultException
-	 */
+  /**
+   * @param string $token
+   * @param string $secret
+   * @param HttpFetch|null $httpFetch
+   *
+   * @throws HttpFetchNoResultException
+   */
 
-	private function collectOrGatherRequests($token, $secret, HttpFetch $httpFetch = null)
-	{
-		$actionParameters = array();
-		$actionParametersOrder = array();
+  public function sendRequests($token, $secret, HttpFetch $httpFetch = null)
+  {
+    $this->collectOrGatherRequests($token, $secret, $httpFetch);
+  }
 
-		foreach ($this->_requestQueue as $requestId => $pRequest)
-		{
-			$usedParameters = $pRequest->getApiAction()->getActionParameters();
-			$cachedResponse = $this->getFromCache($usedParameters);
+  /**
+   * @param string $token
+   * @param array $actionParameters
+   * @param array $actionParametersOrder
+   * @param \onOffice\SDK\internal\HttpFetch|null $httpFetch
+   *
+   * @throws HttpFetchNoResultException
+   */
 
-			if ($cachedResponse === null)
-			{
-				$parametersThisAction = $pRequest->createRequest($token, $secret);
+  private function sendHttpRequests(
+    $token,
+    array $actionParameters,
+    array $actionParametersOrder,
+    HttpFetch $httpFetch = null
+  ) {
+    if (count($actionParameters) === 0) {
+      return;
+    }
 
-				$actionParameters[] = $parametersThisAction;
-				$actionParametersOrder[] = $pRequest;
-			}
-			else
-			{
-				$this->_responses[$requestId] = new Response($pRequest, $cachedResponse);
-			}
-		}
+    $responseHttp = $this->getFromHttp($token, $actionParameters, $httpFetch);
 
-		$this->sendHttpRequests($token, $actionParameters, $actionParametersOrder, $httpFetch);
-		$this->_requestQueue = array();
-	}
-
-	/**
-	 * @param array $responses
-	 */
-	private function writeCacheForResponses(array $responses)
-	{
-		if (count($this->_caches) === 0)
-		{
-			return;
-		}
-
-		$responseObjects = array_intersect_key($this->_responses, array_flip($responses));
-
-		foreach ($responseObjects as $pResponse)
-		{
-			/* @var $pResponse Response */
-			if ($pResponse->isCacheable())
-			{
-				$responseData = $pResponse->getResponseData();
-				$requestParameters = $pResponse->getRequest()->getApiAction()->getActionParameters();
-				$this->writeCache(serialize($responseData), $requestParameters);
-			}
-		}
-	}
+    $result = json_decode($responseHttp, true);
 
 
-	/**
-	 * @param array $parameters
-	 * @return array
-	 */
-	private function getFromCache($parameters)
-	{
-		foreach ($this->_caches as $pCache)
-		{
-			$resultCache = $pCache->getHttpResponseByParameterArray($parameters);
+    if (!isset($result['response']['results'])) {
+      throw new HttpFetchNoResultException;
+    }
 
-			if ($resultCache != null)
-			{
-				return unserialize($resultCache);
-			}
-		}
+    $idsForCache = array();
 
-		return null;
-	}
+    foreach ($result['response']['results'] as $requestNumber => $resultHttp) {
+      $pRequest = $actionParametersOrder[$requestNumber];
+      $requestId = $pRequest->getRequestId();
 
-	/**
-	 * @param string $result
-	 * @param $actionParameters
-	 */
-	private function writeCache($result, $actionParameters)
-	{
-		foreach ($this->_caches as $pCache)
-		{
-			$pCache->write($actionParameters, $result);
-		}
-	}
+      if ($resultHttp['status']['errorcode'] == 0) {
+        $this->_responses[$requestId] = new Response($pRequest, $resultHttp);
+        $idsForCache[] = $requestId;
+      } else {
+        $this->_errors[$requestId] = $resultHttp;
+      }
+    }
+    $this->writeCacheForResponses($idsForCache);
+  }
 
+  /**
+   * @param string $token
+   * @param string $secret
+   * @param HttpFetch|null $httpFetch
+   *
+   * @throws HttpFetchNoResultException
+   */
 
-	/**
-	 * @param array $curlOptions
-	 */
-	public function setCurlOptions($curlOptions)
-	{
-		$this->_curlOptions = $curlOptions;
-	}
+  private function collectOrGatherRequests($token, $secret, HttpFetch $httpFetch = null)
+  {
+    $actionParameters = array();
+    $actionParametersOrder = array();
 
-	/**
-	 * @param string $token
-	 * @param array $actionParameters
-	 * @param \onOffice\SDK\internal\HttpFetch|null $httpFetch
-	 * @return string
-	 *
-	 * @throws HttpFetchNoResultException
-	 */
-	private function getFromHttp(
-		$token,
-		$actionParameters,
-		HttpFetch $httpFetch = null
-	) {
+    foreach ($this->_requestQueue as $requestId => $pRequest) {
+      $usedParameters = $pRequest->getApiAction()->getActionParameters();
+      $cachedResponse = $this->getFromCache($usedParameters);
 
-		$request = array
-			(
-				'token' => $token,
-				'request' => array('actions' => $actionParameters),
-			);
+      if ($cachedResponse === null) {
+        $parametersThisAction = $pRequest->createRequest($token, $secret);
 
-		if (null === $httpFetch) {
-			$httpFetch = new HttpFetch($this->getApiUrl(), json_encode($request));
-			$httpFetch->setCurlOptions($this->_curlOptions);
-		}
+        $actionParameters[] = $parametersThisAction;
+        $actionParametersOrder[] = $pRequest;
+      } else {
+        $this->_responses[$requestId] = new Response($pRequest, $cachedResponse);
+      }
+    }
 
-		$response = $httpFetch->send();
+    $this->sendHttpRequests($token, $actionParameters, $actionParametersOrder, $httpFetch);
+    $this->_requestQueue = array();
+  }
 
-		return $response;
-	}
+  /**
+   * @param array $responses
+   */
+  private function writeCacheForResponses(array $responses)
+  {
+    if (count($this->_caches) === 0) {
+      return;
+    }
 
+    $responseObjects = array_intersect_key($this->_responses, array_flip($responses));
 
-	/**
-	 * @param int $handle
-	 * @return array
-	 * @throws ApiCallFaultyResponseException
-	 */
-	public function getResponse($handle)
-	{
-		if (array_key_exists($handle, $this->_responses))
-		{
-			/* @var $pResponse Response */
-			$pResponse = $this->_responses[$handle];
-
-			if (!$pResponse->isValid())
-			{
-				throw new ApiCallFaultyResponseException('Handle: '.$handle);
-			}
-
-			unset($this->_responses[$handle]);
-
-			// do not return $pResponse itself
-			return $pResponse->getResponseData();
-		}
-	}
+    foreach ($responseObjects as $pResponse) {
+      /* @var $pResponse Response */
+      if ($pResponse->isCacheable()) {
+        $responseData = $pResponse->getResponseData();
+        $requestParameters = $pResponse->getRequest()->getApiAction()->getActionParameters();
+        $this->writeCache(serialize($responseData), $requestParameters);
+      }
+    }
+  }
 
 
-	/**
-	 * @return string
-	 */
-	private function getApiUrl()
-	{
-		return $this->_server.urlencode($this->_apiVersion).'/api.php';
-	}
+  /**
+   * @param array $parameters
+   * @return array
+   */
+  private function getFromCache($parameters)
+  {
+    foreach ($this->_caches as $pCache) {
+      $resultCache = $pCache->getHttpResponseByParameterArray($parameters);
+
+      if ($resultCache != null) {
+        return unserialize($resultCache);
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * @param string $result
+   * @param $actionParameters
+   */
+  private function writeCache($result, $actionParameters)
+  {
+    foreach ($this->_caches as $pCache) {
+      $pCache->write($actionParameters, $result);
+    }
+  }
 
 
-	/**
-	 * @param string $apiVersion
-	 */
-	public function setApiVersion($apiVersion)
-	{
-		$this->_apiVersion = $apiVersion;
-	}
+  /**
+   * @param array $curlOptions
+   */
+  public function setCurlOptions($curlOptions)
+  {
+    $this->_curlOptions = $curlOptions;
+  }
+
+  /**
+   * @param string $token
+   * @param array $actionParameters
+   * @param \onOffice\SDK\internal\HttpFetch|null $httpFetch
+   * @return string
+   *
+   * @throws HttpFetchNoResultException
+   */
+  private function getFromHttp(
+    $token,
+    $actionParameters,
+    HttpFetch $httpFetch = null
+  ) {
+
+    $request = array(
+      'token' => $token,
+      'request' => array('actions' => $actionParameters),
+    );
+
+    if (null === $httpFetch) {
+      $httpFetch = new HttpFetch($this->getApiUrl(), json_encode($request));
+      $httpFetch->setCurlOptions($this->_curlOptions);
+    }
+
+    $response = $httpFetch->send();
+
+    return $response;
+  }
 
 
-	/**
-	 * @param string $server
-	 */
-	public function setServer($server)
-	{
-		$this->_server = $server;
-	}
+  /**
+   * @param int $handle
+   * @return array
+   * @throws ApiCallFaultyResponseException
+   */
+  public function getResponse($handle)
+  {
+    if (array_key_exists($handle, $this->_responses)) {
+      /* @var $pResponse Response */
+      $pResponse = $this->_responses[$handle];
 
-	/**
-	 * @return array
-	 */
-	public function getErrors()
-	{
-		return $this->_errors;
-	}
+      if (!$pResponse->isValid()) {
+        throw new ApiCallFaultyResponseException('Handle: ' . $handle);
+      }
+
+      unset($this->_responses[$handle]);
+
+      // do not return $pResponse itself
+      return $pResponse->getResponseData();
+    }
+  }
 
 
-	/**
-	 * @param onOfficeSDKCache $pCache
-	 */
-	public function addCache(onOfficeSDKCache $pCache)
-	{
-		$this->_caches []= $pCache;
-	}
+  /**
+   * @return string
+   */
+  private function getApiUrl()
+  {
+    return $this->_server . urlencode($this->_apiVersion) . '/api.php';
+  }
 
-	public function removeCacheInstances() {
-		$this->_caches = array();
-	}
+
+  /**
+   * @param string $apiVersion
+   */
+  public function setApiVersion($apiVersion)
+  {
+    $this->_apiVersion = $apiVersion;
+  }
+
+
+  /**
+   * @param string $server
+   */
+  public function setServer($server)
+  {
+    $this->_server = $server;
+  }
+
+  /**
+   * @return array
+   */
+  public function getErrors()
+  {
+    return $this->_errors;
+  }
+
+
+  /**
+   * @param onOfficeSDKCache $pCache
+   */
+  public function addCache(onOfficeSDKCache $pCache)
+  {
+    $this->_caches[] = $pCache;
+  }
+
+  public function removeCacheInstances()
+  {
+    $this->_caches = array();
+  }
 }

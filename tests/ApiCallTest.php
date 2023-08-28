@@ -9,157 +9,161 @@ use onOffice\SDK\internal\HttpFetch;
 
 class ApiCallTest extends \PHPUnit\Framework\TestCase
 {
-	public function testCallByRawData()
-	{
-		$apiCall = new ApiCall();
+  public function testCallByRawData()
+  {
+    $apiCall = new ApiCall();
 
-		$result = $apiCall->callByRawData(
-			'someActionId',
-			'someResourceId',
-			'someIdentifier',
-			'someResourceType',
-			[]
-		);
+    $result = $apiCall->callByRawData(
+      'someActionId',
+      'someResourceId',
+      'someIdentifier',
+      'someResourceType',
+      []
+    );
 
-		$this->assertEquals(0, $result);
-	}
+    $this->assertEquals(0, $result);
+  }
 
-	public function testSendRequests()
-	{
-		$apiCall = new ApiCall();
+  public function testSendRequests()
+  {
+    $apiCall = new ApiCall();
 
-		$httpFetch = $this->getMockBuilder(HttpFetch::class)
-			->disableOriginalConstructor()
-			->setMethods(['send'])
-			->getMock();
+    $httpFetch = $this->getMockBuilder(HttpFetch::class)
+      ->disableOriginalConstructor()
+      ->setMethods(['send'])
+      ->getMock();
 
-		$id = $apiCall->callByRawData(
-			'someActionId',
-			'someResourceId',
-			'someIdentifier',
-			'someResourceType',
-			[]
-		);
+    $id = $apiCall->callByRawData(
+      'someActionId',
+      'someResourceId',
+      'someIdentifier',
+      'someResourceType',
+      []
+    );
 
-		$array = [
-			'response' => [
-				'results' => [
-					0 => [
-						'status' => [
-							'errorcode' => 0
-						]
-					]
-				]
-			]
-		];
+    $array = [
+      'response' => [
+        'results' => [
+          0 => [
+            'status' => [
+              'errorcode' => 0
+            ]
+          ]
+        ]
+      ]
+    ];
 
-		$httpFetch
-			->expects($this->once())
-			->method('send')
-			->willReturn(json_encode($array));
+    $httpFetch
+      ->expects($this->once())
+      ->method('send')
+      ->willReturn(json_encode($array));
 
-		$apiCall->sendRequests(
-			'someToken',
-			'someSecret',
-			$httpFetch
-		);
-	}
+    $apiCall->sendRequests(
+      'someToken',
+      'someSecret',
+      $httpFetch
+    );
+  }
 
-	public function testSendRequestsWithoutCallByRawData()
-	{
-		$apiCall = new ApiCall();
+  public function testSendRequestsWithoutCallByRawData()
+  {
+    $apiCall = new ApiCall();
 
-		$httpFetch = $this->getMockBuilder(HttpFetch::class)
-			->disableOriginalConstructor()
-			->setMethods(['send'])
-			->getMock();
+    $httpFetch = $this->getMockBuilder(HttpFetch::class)
+      ->disableOriginalConstructor()
+      ->setMethods(['send'])
+      ->getMock();
 
 
-		$httpFetch
-			->expects($this->never())
-			->method('send');
+    $httpFetch
+      ->expects($this->never())
+      ->method('send');
 
-		$apiCall->sendRequests(
-			'someToken',
-			'someSecret',
-			$httpFetch
-		);
-	}
+    $apiCall->sendRequests(
+      'someToken',
+      'someSecret',
+      $httpFetch
+    );
+  }
 
-	public function testSendRequestsWithoutProperresponse()
-	{
-		$this->expectException(HttpFetchNoResultException::class);
+  public function testSendRequestsWithoutProperresponse()
+  {
+    $this->expectException(HttpFetchNoResultException::class);
 
-		$apiCall = new ApiCall();
+    $apiCall = new ApiCall();
 
-		$httpFetch = $this->getMockBuilder(HttpFetch::class)
-			->disableOriginalConstructor()
-			->setMethods(['send'])
-			->getMock();
+    $httpFetch = $this->getMockBuilder(HttpFetch::class)
+      ->disableOriginalConstructor()
+      ->setMethods(['send'])
+      ->getMock();
 
-		$apiCall->callByRawData(
-			'someActionId',
-			'someResourceId',
-			'someIdentifier',
-			'someResourceType',
-			[]
-		);
+    $apiCall->callByRawData(
+      'someActionId',
+      'someResourceId',
+      'someIdentifier',
+      'someResourceType',
+      []
+    );
 
-		$array = [
-			'response' => []
-		];
+    $array = [
+      'response' => []
+    ];
 
-		$httpFetch
-			->expects($this->once())
-			->method('send')
-			->willReturn(json_encode($array));
+    $httpFetch
+      ->expects($this->once())
+      ->method('send')
+      ->willReturn(json_encode($array));
 
-		$apiCall->sendRequests(
-			'someToken',
-			'someSecret',
-			$httpFetch
-		);
-	}
+    $apiCall->sendRequests(
+      'someToken',
+      'someSecret',
+      $httpFetch
+    );
+  }
 
-	/**
-	 * @doesNotPerformAssertions
-	 */
-	public function testSetApiVersion()
-	{
-		$apiCall = new ApiCall();
-		$apiCall->setApiVersion('v1');
-	}
+  /**
+   * @doesNotPerformAssertions
+   */
+  public function testSetApiVersion()
+  {
+    $apiCall = new ApiCall();
+    $apiCall->setApiVersion('v1');
+  }
 
-	/**
-	 * @doesNotPerformAssertions
-	 */
-	public function testAddCache()
-	{
-		$cache = $this->getMockBuilder(onOfficeSDKCache::class)
-			->getMock();
+  /**
+   * @doesNotPerformAssertions
+   */
+  public function testAddCache()
+  {
+    $cache = $this->getMockBuilder(onOfficeSDKCache::class)
+      ->disableOriginalConstructor()
+      ->disableOriginalClone()
+      ->getMock();
 
-		$apiCall = new ApiCall();
-		$apiCall->addCache($cache);
-	}
+    $apiCall = new ApiCall();
+    $apiCall->addCache($cache);
+  }
 
-	/**
-	 * @doesNotPerformAssertions
-	 */
-	public function testRemoveCacheInstances()
-	{
-		$cache = $this->getMockBuilder(onOfficeSDKCache::class)
-			->getMock();
+  /**
+   * @doesNotPerformAssertions
+   */
+  public function testRemoveCacheInstances()
+  {
+    $cache = $this->getMockBuilder(onOfficeSDKCache::class)
+      ->disableOriginalConstructor()
+      ->disableOriginalClone()
+      ->getMock();
 
-		$apiCall = new ApiCall();
-		$apiCall->addCache($cache);
-		$apiCall->removeCacheInstances();
-	}
+    $apiCall = new ApiCall();
+    $apiCall->addCache($cache);
+    $apiCall->removeCacheInstances();
+  }
 
-	public function testGetErrors()
-	{
-		$apiCall = new ApiCall();
-		$result = $apiCall->getErrors();
+  public function testGetErrors()
+  {
+    $apiCall = new ApiCall();
+    $result = $apiCall->getErrors();
 
-		$this->assertEquals([], $result);
-	}
+    $this->assertEquals([], $result);
+  }
 }
