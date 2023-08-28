@@ -2,44 +2,43 @@ name: Unit Tests
 
 on:
   push:
-    branches: [ '*' ]
+    branches: ["*"]
   pull_request:
-    branches: [ master ]
+    branches: [master]
   schedule:
     - cron: "0 06 * * 1"
 
 jobs:
   build:
-
     runs-on: ubuntu-18.04
     strategy:
       matrix:
-        php: ['7.0', '7.1', '7.2', '7.3', '7.4']
+        php: ["8.1", "8.2"]
 
     steps:
-    - uses: actions/checkout@v2
-    
-    - name: Setup PHP with pre-release PECL extension
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: ${{ matrix.php }}
+      - uses: actions/checkout@v2
 
-    - run: sudo apt-get update && sudo apt-get install faketime nmap
+      - name: Setup PHP with pre-release PECL extension
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
 
-    - name: Validate composer.json and composer.lock
-      run: composer validate --strict
+      - run: sudo apt-get update && sudo apt-get install faketime nmap
 
-    - name: Cache Composer packages
-      id: composer-cache
-      uses: actions/cache@v2
-      with:
-        path: vendor
-        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-php-
+      - name: Validate composer.json and composer.lock
+        run: composer validate --strict
 
-    - name: Install dependencies
-      run: composer install --prefer-dist --no-progress
+      - name: Cache Composer packages
+        id: composer-cache
+        uses: actions/cache@v2
+        with:
+          path: vendor
+          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-
 
-    - name: Tests
-      run: vendor/bin/phpunit
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Tests
+        run: vendor/bin/phpunit
