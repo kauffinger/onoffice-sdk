@@ -20,6 +20,8 @@
     "phpunit/phpunit": "^9",
     "friendsofphp/php-cs-fixer": "^2.16",
     "symfony/process": "^3.4.37",
-    "phpstan/phpstan": "^1.10"
+    "phpstan/phpstan": "^1.10",
+    "phpstan/phpstan-mockery": "^1.1",
+    "laravel/pint": "^1.11"
   }
 }
