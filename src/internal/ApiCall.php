@@ -70,15 +70,15 @@ class ApiCall
      */
     private function sendHttpRequests(
         $token,
-        array $actionParameters,
-        array $actionParametersOrder,
+        array $actions,
+        array $actionsOrder,
         HttpFetch $httpFetch = null
     ) {
-        if (count($actionParameters) === 0) {
+        if (count($actions) === 0) {
             return;
         }
 
-        $responseHttp = $this->getFromHttp($token, $actionParameters, $httpFetch);
+        $responseHttp = $this->getFromHttp($token, $actions, $httpFetch);
 
         $result = json_decode($responseHttp, true);
 
@@ -89,7 +89,7 @@ class ApiCall
         $idsForCache = [];
 
         foreach ($result['response']['results'] as $requestNumber => $resultHttp) {
-            $pRequest = $actionParametersOrder[$requestNumber];
+            $pRequest = $actionsOrder[$requestNumber];
             $requestId = $pRequest->getRequestId();
 
             if ($resultHttp['status']['errorcode'] == 0) {
@@ -110,24 +110,24 @@ class ApiCall
      */
     private function collectOrGatherRequests($token, $secret, HttpFetch $httpFetch = null)
     {
-        $actionParameters = [];
-        $actionParametersOrder = [];
+        $actions = [];
+        $actionsOrder = [];
 
         foreach ($this->_requestQueue as $requestId => $pRequest) {
             $usedParameters = $pRequest->getApiAction()->getActionParameters();
             $cachedResponse = $this->getFromCache($usedParameters);
 
-            if ($cachedResponse === null) {
-                $parametersThisAction = $pRequest->createRequest($token, $secret);
-
-                $actionParameters[] = $parametersThisAction;
-                $actionParametersOrder[] = $pRequest;
-            } else {
+            if ($cachedResponse !== null) {
                 $this->_responses[$requestId] = new Response($pRequest, $cachedResponse);
+
+                continue;
             }
+
+            $actions[] = $pRequest->createRequest($token, $secret);
+            $actionsOrder[] = $pRequest;
         }
 
-        $this->sendHttpRequests($token, $actionParameters, $actionParametersOrder, $httpFetch);
+        $this->sendHttpRequests($token, $actions, $actionsOrder, $httpFetch);
         $this->_requestQueue = [];
     }
 
@@ -186,7 +186,7 @@ class ApiCall
 
     /**
      * @param  string  $token
-     * @param  array  $actionParameters
+     * @param  array  $action
      * @param  \onOffice\SDK\internal\HttpFetch|null  $httpFetch
      * @return string
      *
@@ -194,13 +194,13 @@ class ApiCall
      */
     private function getFromHttp(
         $token,
-        $actionParameters,
+        $action,
         HttpFetch $httpFetch = null
     ) {
 
         $request = [
             'token' => $token,
-            'request' => ['actions' => $actionParameters],
+            'request' => ['actions' => $action],
         ];
 
         if (null === $httpFetch) {
