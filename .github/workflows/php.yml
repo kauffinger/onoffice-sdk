@@ -23,7 +23,10 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
 
-      - run: sudo apt-get update && sudo apt-get install faketime netcat
+      - run: sudo apt-get update && sudo apt-get install -y faketime netcat
+
+      - name: Run ncat command
+        run: ncat --version
 
       - name: Validate composer.json and composer.lock
         run: composer validate --strict
