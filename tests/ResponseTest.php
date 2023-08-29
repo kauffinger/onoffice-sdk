@@ -8,187 +8,187 @@ use onOffice\SDK\internal\Response;
 
 class ResponseTest extends \PHPUnit\Framework\TestCase
 {
-	public function testIsValid()
-	{
-		$apiAction = new ApiAction(
-			'someActionId',
-			'someResourceType',
-			[],
-			'someResourceId',
-			'someIdentifier'
-		);
+    public function testIsValid()
+    {
+        $apiAction = new ApiAction(
+            'someActionId',
+            'someResourceType',
+            [],
+            'someResourceId',
+            'someIdentifier'
+        );
 
-		$request = new Request($apiAction);
+        $request = new Request($apiAction);
 
-		$response = new Response($request, [
-			'actionid' => 'someActionId',
-			'resourcetype' => 'someResourceType',
-			'data' => 'someData'
-		]);
+        $response = new Response($request, [
+            'actionid' => 'someActionId',
+            'resourcetype' => 'someResourceType',
+            'data' => 'someData',
+        ]);
 
-		$result = $response->isValid();
+        $result = $response->isValid();
 
-		$this->assertTrue($result);
-	}
+        $this->assertTrue($result);
+    }
 
-	public function testIsInvalid()
-	{
-		$apiAction = new ApiAction(
-			'someActionId',
-			'someResourceType',
-			[],
-			'someResourceId',
-			'someIdentifier'
-		);
+    public function testIsInvalid()
+    {
+        $apiAction = new ApiAction(
+            'someActionId',
+            'someResourceType',
+            [],
+            'someResourceId',
+            'someIdentifier'
+        );
 
-		$request = new Request($apiAction);
+        $request = new Request($apiAction);
 
-		$response = new Response($request, []);
+        $response = new Response($request, []);
 
-		$result = $response->isValid();
+        $result = $response->isValid();
 
-		$this->assertFalse($result);
-	}
+        $this->assertFalse($result);
+    }
 
-	public function testIsNotCacheable()
-	{
-		$apiAction = new ApiAction(
-			'someActionId',
-			'someResourceType',
-			[],
-			'someResourceId',
-			'someIdentifier'
-		);
+    public function testIsNotCacheable()
+    {
+        $apiAction = new ApiAction(
+            'someActionId',
+            'someResourceType',
+            [],
+            'someResourceId',
+            'someIdentifier'
+        );
 
-		$request = new Request($apiAction);
+        $request = new Request($apiAction);
 
-		$response = new Response($request, [
-			'actionid' => 'someActionId',
-			'resourcetype' => 'someResourceType',
-			'data' => 'someData',
-			'cacheable' => true
-		]);
+        $response = new Response($request, [
+            'actionid' => 'someActionId',
+            'resourcetype' => 'someResourceType',
+            'data' => 'someData',
+            'cacheable' => true,
+        ]);
 
-		$result = $response->isCacheable();
+        $result = $response->isCacheable();
 
-		$this->assertTrue($result);
-	}
+        $this->assertTrue($result);
+    }
 
-	public function testIsNotCacheableBecauseResponseHasBooleanFlag()
-	{
-		$apiAction = new ApiAction(
-			'someActionId',
-			'someResourceType',
-			[],
-			'someResourceId',
-			'someIdentifier'
-		);
+    public function testIsNotCacheableBecauseResponseHasBooleanFlag()
+    {
+        $apiAction = new ApiAction(
+            'someActionId',
+            'someResourceType',
+            [],
+            'someResourceId',
+            'someIdentifier'
+        );
 
-		$request = new Request($apiAction);
+        $request = new Request($apiAction);
 
-		$response = new Response($request, [
-			'actionid' => 'someActionId',
-			'resourcetype' => 'someResourceType',
-			'data' => 'someData',
-			'cacheable' => false
-		]);
+        $response = new Response($request, [
+            'actionid' => 'someActionId',
+            'resourcetype' => 'someResourceType',
+            'data' => 'someData',
+            'cacheable' => false,
+        ]);
 
-		$result = $response->isCacheable();
+        $result = $response->isCacheable();
 
-		$this->assertFalse($result);
-	}
+        $this->assertFalse($result);
+    }
 
-	public function testIsNotCacheableBecauseResponseIsInvalid()
-	{
-		$apiAction = new ApiAction(
-			'someActionId',
-			'someResourceType',
-			[],
-			'someResourceId',
-			'someIdentifier'
-		);
+    public function testIsNotCacheableBecauseResponseIsInvalid()
+    {
+        $apiAction = new ApiAction(
+            'someActionId',
+            'someResourceType',
+            [],
+            'someResourceId',
+            'someIdentifier'
+        );
 
-		$request = new Request($apiAction);
+        $request = new Request($apiAction);
 
-		$response = new Response($request, [
-			'cacheable' => true
-		]);
+        $response = new Response($request, [
+            'cacheable' => true,
+        ]);
 
-		$result = $response->isCacheable();
+        $result = $response->isCacheable();
 
-		$this->assertFalse($result);
-	}
+        $this->assertFalse($result);
+    }
 
-	public function testIsNotCacheableBecauseResponseBooleanFlagIsMissing()
-	{
-		$apiAction = new ApiAction(
-			'someActionId',
-			'someResourceType',
-			[],
-			'someResourceId',
-			'someIdentifier'
-		);
+    public function testIsNotCacheableBecauseResponseBooleanFlagIsMissing()
+    {
+        $apiAction = new ApiAction(
+            'someActionId',
+            'someResourceType',
+            [],
+            'someResourceId',
+            'someIdentifier'
+        );
 
-		$request = new Request($apiAction);
+        $request = new Request($apiAction);
 
-		$response = new Response($request, [
-			'actionid' => 'someActionId',
-			'resourcetype' => 'someResourceType',
-			'data' => 'someData'
-		]);
+        $response = new Response($request, [
+            'actionid' => 'someActionId',
+            'resourcetype' => 'someResourceType',
+            'data' => 'someData',
+        ]);
 
-		$result = $response->isCacheable();
+        $result = $response->isCacheable();
 
-		$this->assertFalse($result);
-	}
+        $this->assertFalse($result);
+    }
 
-	public function testGetRequest()
-	{
-		$apiAction = new ApiAction(
-			'someActionId',
-			'someResourceType',
-			[],
-			'someResourceId',
-			'someIdentifier'
-		);
+    public function testGetRequest()
+    {
+        $apiAction = new ApiAction(
+            'someActionId',
+            'someResourceType',
+            [],
+            'someResourceId',
+            'someIdentifier'
+        );
 
-		$request = new Request($apiAction);
+        $request = new Request($apiAction);
 
-		$response = new Response($request, [
-			'actionid' => 'someActionId',
-			'resourcetype' => 'someResourceType',
-			'data' => 'someData'
-		]);
+        $response = new Response($request, [
+            'actionid' => 'someActionId',
+            'resourcetype' => 'someResourceType',
+            'data' => 'someData',
+        ]);
 
-		$result = $response->getRequest();
+        $result = $response->getRequest();
 
-		$this->assertSame($request, $result);
-	}
+        $this->assertSame($request, $result);
+    }
 
-	public function testGetResponseData()
-	{
-		$apiAction = new ApiAction(
-			'someActionId',
-			'someResourceType',
-			[],
-			'someResourceId',
-			'someIdentifier'
-		);
+    public function testGetResponseData()
+    {
+        $apiAction = new ApiAction(
+            'someActionId',
+            'someResourceType',
+            [],
+            'someResourceId',
+            'someIdentifier'
+        );
 
-		$request = new Request($apiAction);
+        $request = new Request($apiAction);
 
-		$responseData = [
-			'actionid' => 'someActionId',
-			'resourcetype' => 'someResourceType',
-			'data' => 'someData'
-		];
+        $responseData = [
+            'actionid' => 'someActionId',
+            'resourcetype' => 'someResourceType',
+            'data' => 'someData',
+        ];
 
-		$response = new Response(
-			$request, $responseData
-		);
+        $response = new Response(
+            $request, $responseData
+        );
 
-		$result = $response->getResponseData();
+        $result = $response->getResponseData();
 
-		$this->assertSame($responseData, $result);
-	}
+        $this->assertSame($responseData, $result);
+    }
 }

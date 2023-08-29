@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Tests\onOffice\SDK;
 
 use Symfony\Component\Process\Process;
@@ -27,7 +26,6 @@ class SDKIntegrationTest extends \PHPUnit\Framework\TestCase
         $process->run();
         $this->assertSame(0, $process->getExitCode());
     }
-
 
     /**
      * @depends test_ncat_available
@@ -74,9 +72,9 @@ EOS;
 
         $this->assertTrue($ncat->isStarted());
 
-        if ($php->isTerminated())
-        {
+        if ($php->isTerminated()) {
             $this->fail('PHP terminated');
+
             return;
         }
 
@@ -85,7 +83,7 @@ EOS;
                 $php->checkTimeout();
                 $ncat->checkTimeout();
             } catch (\Symfony\Component\Process\Exception\ProcessTimedOutException $e) {
-                $this->fail('Process took too long. //// ' . $php->getErrorOutput(). ' //// '. $ncat->getErrorOutput());
+                $this->fail('Process took too long. //// '.$php->getErrorOutput().' //// '.$ncat->getErrorOutput());
                 break;
             }
 

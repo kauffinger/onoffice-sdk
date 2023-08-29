@@ -1,6 +1,7 @@
 <?php
 
-
 namespace onOffice\SDK\Exception;
 
-class ApiCallFaultyResponseException extends SDKException {}
+class ApiCallFaultyResponseException extends SDKException
+{
+}

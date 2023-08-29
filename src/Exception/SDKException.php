@@ -1,6 +1,7 @@
 <?php
 
-
 namespace onOffice\SDK\Exception;
 
-abstract class SDKException extends \Exception { }
+abstract class SDKException extends \Exception
+{
+}
